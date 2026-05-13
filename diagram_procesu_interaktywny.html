@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagram procesu produkcji — e-medycyna.pl</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f5f7;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  .page-header {
+    max-width: 860px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .page-header span {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .diagram-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    padding: 20px;
+  }
+
+  svg { display: block; width: 100%; height: auto; }
+
+  /* klikalne bloki */
+  .clickable { cursor: pointer; transition: filter 0.15s; }
+  .clickable:hover rect, .clickable:hover { filter: brightness(0.93); }
+  .clickable rect { transition: filter 0.15s; }
+
+  /* MODAL */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.active { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    position: relative;
+    animation: popIn 0.18s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px; right: 18px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #999;
+    line-height: 1;
+    border: none;
+    background: none;
+  }
+  .modal-close:hover { color: #333; }
+
+  .modal-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .modal h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+  }
+  .modal .step-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 14px;
+  }
+  .modal ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .modal ul li {
+    font-size: 13.5px;
+    color: #333;
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .modal ul li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #aaa;
+    font-size: 12px;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 11.5px;
+    color: #aaa;
+    margin-top: 14px;
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Diagram procesu produkcji</h1>
+  <span>Kliknij blok aby zobaczyć szczegóły</span>
+</div>
+
+<div class="diagram-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 814 1030" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- ===== LEGENDA ===== -->
+  <rect x="10" y="8" width="794" height="58" rx="6" fill="none" stroke="#d0cfc9" stroke-width="0.8"/>
+  <!-- rząd 1 -->
+  <rect x="22" y="18" width="11" height="11" rx="2" fill="#eeedfe" stroke="#534AB7" stroke-width="0.8"/>
+  <text x="38" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Zarząd</text>
+  <rect x="96" y="18" width="11" height="11" rx="2" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+  <text x="112" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Milena</text>
+  <rect x="164" y="18" width="11" height="11" rx="2" fill="#fbeaf0" stroke="#993556" stroke-width="0.8"/>
+  <text x="180" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Monika</text>
+  <rect x="244" y="18" width="11" height="11" rx="2" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+  <text x="260" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Studio (Łukasz + Radek)</text>
+  <rect x="442" y="18" width="11" height="11" rx="2" fill="#faece7" stroke="#993c1d" stroke-width="0.8"/>
+  <text x="458" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Ela</text>
+  <rect x="490" y="18" width="11" height="11" rx="2" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.8"/>
+  <text x="506" y="24" dominant-baseline="central" font-size="10" fill="#3d3d3a">Tabela TERMINY</text>
+  <!-- rząd 2 -->
+  <line x1="22" y1="50" x2="72" y2="50" stroke="#737270" stroke-width="1.1" stroke-dasharray="5 3"/>
+  <text x="78" y="50" dominant-baseline="central" font-size="10" fill="#3d3d3a">komunikacja mailowa (przerywana linia)</text>
+
+  <!-- ===== KROK 1 ===== -->
+  <text x="10" y="82" font-size="9.5" fill="#737270">1. Start procesu</text>
+  <g class="clickable" onclick="show('k1')">
+    <rect x="10" y="88" width="794" height="48" rx="6" fill="#eeedfe" stroke="#534AB7" stroke-width="0.8"/>
+    <text x="407" y="107" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#3c3489">Zarząd</text>
+    <text x="407" y="123" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#534AB7">Ustalenie zakresu usług + przygotowanie oferty dla klienta</text>
+  </g>
+
+  <line x1="407" y1="136" x2="407" y2="150" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 2 ===== -->
+  <text x="10" y="160" font-size="9.5" fill="#737270">2. Planowanie</text>
+  <g class="clickable" onclick="show('k2a')">
+    <rect x="10" y="166" width="370" height="48" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="195" y="184" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena</text>
+    <text x="195" y="200" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Przenosi dane projektu do Tabeli TERMINY</text>
+  </g>
+  <line x1="380" y1="190" x2="394" y2="190" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k2b')">
+    <rect x="394" y="166" width="410" height="48" rx="6" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.8"/>
+    <text x="599" y="184" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#0c447c">Tabela TERMINY</text>
+    <text x="599" y="200" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#185fa5">Webinar · podcast · adboard · rolki · raport</text>
+  </g>
+
+  <!-- boczna linia zarząd -->
+  <path d="M804 112 L814 112 L814 198 L804 198" fill="none" stroke="#534AB7" stroke-width="0.9" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+  <text x="0" y="147" dominant-baseline="central" font-size="9" fill="#534AB7" transform="translate(816,0)">Zmiany</text>
+  <text x="0" y="160" dominant-baseline="central" font-size="9" fill="#534AB7" transform="translate(816,0)">zatwierdza</text>
+  <text x="0" y="173" dominant-baseline="central" font-size="9" fill="#534AB7" transform="translate(816,0)">Zarząd</text>
+
+  <line x1="407" y1="214" x2="407" y2="228" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 3 ===== -->
+  <text x="10" y="238" font-size="9.5" fill="#737270">3. Przygotowanie — kontakt z klientem</text>
+  <g class="clickable" onclick="show('k3')">
+    <rect x="10" y="244" width="794" height="80" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="407" y="263" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena</text>
+    <text x="407" y="280" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Pozyskanie materiałów reklamowych i info o oprawie graficznej</text>
+    <text x="407" y="296" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Odbiór prezentacji od wykładowców, info logistyczne, catering</text>
+    <text x="407" y="312" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Zlecenie grafik do Moniki</text>
+  </g>
+
+  <line x1="407" y1="324" x2="407" y2="338" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 4 ===== -->
+  <text x="10" y="348" font-size="9.5" fill="#737270">4. Produkcja graficzna i content</text>
+  <g class="clickable" onclick="show('k4a')">
+    <rect x="10" y="354" width="456" height="80" rx="6" fill="#fbeaf0" stroke="#993556" stroke-width="0.8"/>
+    <text x="238" y="373" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#722436">Monika</text>
+    <text x="238" y="390" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">Produkcja pakietu graficznego: tablice i oprawa wizualna</text>
+    <text x="238" y="406" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">Przygotowanie i wysyłka newsletterów</text>
+    <text x="238" y="422" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">Wysyłka mailingu do uczestników</text>
+  </g>
+  <line x1="466" y1="394" x2="480" y2="394" stroke="#737270" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k4b')">
+    <rect x="480" y="354" width="324" height="80" rx="6" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+    <text x="642" y="373" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#633806">Monika + Studio</text>
+    <text x="642" y="390" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Produkcja contentu</text>
+    <text x="642" y="406" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">na Social Media</text>
+    <text x="642" y="422" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">(Łukasz + Radek)</text>
+  </g>
+
+  <line x1="407" y1="434" x2="407" y2="448" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 5 ===== -->
+  <text x="10" y="458" font-size="9.5" fill="#737270">5. Realizacja</text>
+  <g class="clickable" onclick="show('k5tab')">
+    <rect x="10" y="464" width="152" height="62" rx="6" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.8"/>
+    <text x="86" y="484" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#0c447c">Tabela</text>
+    <text x="86" y="500" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#0c447c">TERMINY</text>
+    <text x="86" y="516" text-anchor="middle" dominant-baseline="central" font-size="9.5" fill="#185fa5">źródło info</text>
+  </g>
+  <line x1="162" y1="495" x2="174" y2="495" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k5mil')">
+    <rect x="174" y="464" width="134" height="62" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="241" y="484" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena</text>
+    <text x="241" y="501" text-anchor="middle" dominant-baseline="central" font-size="9.5" fill="#0f6e56">bezpośrednie</text>
+    <text x="241" y="516" text-anchor="middle" dominant-baseline="central" font-size="9.5" fill="#0f6e56">info</text>
+  </g>
+  <line x1="308" y1="495" x2="322" y2="495" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k5stu')">
+    <rect x="322" y="464" width="482" height="62" rx="6" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+    <text x="563" y="484" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#633806">Studio (Łukasz + Radek)</text>
+    <text x="563" y="500" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Przygotowanie realizacji multimedialnej</text>
+    <text x="563" y="516" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Nagranie wydarzenia</text>
+  </g>
+
+  <line x1="407" y1="526" x2="407" y2="540" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 6 ===== -->
+  <text x="10" y="550" font-size="9.5" fill="#737270">6. Post-produkcja</text>
+  <g class="clickable" onclick="show('k6stu')">
+    <rect x="10" y="556" width="470" height="62" rx="6" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+    <text x="245" y="575" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#633806">Studio (Łukasz + Radek) — montaż</text>
+    <text x="245" y="592" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Montaż wg terminów projektu</text>
+    <text x="245" y="608" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Raportowanie zmian do Eli (mailowo)</text>
+  </g>
+  <line x1="480" y1="587" x2="496" y2="587" stroke="#737270" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k6ela')">
+    <rect x="496" y="556" width="308" height="62" rx="6" fill="#faece7" stroke="#993c1d" stroke-width="0.8"/>
+    <text x="650" y="575" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#712b13">Ela</text>
+    <text x="650" y="592" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993c1d">Odbiera zmiany mailowo</text>
+    <text x="650" y="608" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993c1d">Nadzór nad procesem</text>
+  </g>
+
+  <line x1="407" y1="618" x2="407" y2="632" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 7 ===== -->
+  <text x="10" y="642" font-size="9.5" fill="#737270">7. Publikacja i komunikacja z klientem</text>
+  <g class="clickable" onclick="show('k7mon')">
+    <rect x="10" y="648" width="370" height="62" rx="6" fill="#fbeaf0" stroke="#993556" stroke-width="0.8"/>
+    <text x="195" y="667" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#722436">Monika</text>
+    <text x="195" y="684" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">Publikacja materiałów na e-medycyna.pl</text>
+  </g>
+  <g class="clickable" onclick="show('k7mil')">
+    <rect x="398" y="648" width="406" height="62" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="601" y="667" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena</text>
+    <text x="601" y="683" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Kontakt z klientem po publikacji</text>
+    <text x="601" y="699" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Wysyłka raportów i info</text>
+  </g>
+
+  <line x1="407" y1="710" x2="407" y2="724" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== KROK 8 ===== -->
+  <text x="10" y="734" font-size="9.5" fill="#737270">8. Archiwizacja i dystrybucja SM</text>
+  <g class="clickable" onclick="show('k8stu')">
+    <rect x="10" y="740" width="470" height="62" rx="6" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+    <text x="245" y="759" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#633806">Studio (Łukasz + Radek)</text>
+    <text x="245" y="775" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Archiwizacja materiałów na chmurze</text>
+    <text x="245" y="791" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Produkcja rolek na social media</text>
+  </g>
+  <line x1="480" y1="771" x2="496" y2="771" stroke="#737270" stroke-width="1.5" marker-end="url(#arr)"/>
+  <g class="clickable" onclick="show('k8mil')">
+    <rect x="496" y="740" width="308" height="62" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="650" y="759" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena</text>
+    <text x="650" y="775" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Publikacja rolek na kanałach SM</text>
+  </g>
+
+  <!-- ===== SEPARATOR ===== -->
+  <line x1="10" y1="815" x2="804" y2="815" stroke="#d0cfc9" stroke-width="0.8"/>
+  <text x="407" y="826" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#737270" font-style="italic">Działania równoległe — poza procesami projektowymi</text>
+
+  <!-- ===== RÓWNOLEGŁE rząd 1 ===== -->
+  <g class="clickable" onclick="show('par_ela')">
+    <rect x="10" y="838" width="384" height="70" rx="6" fill="#faece7" stroke="#993c1d" stroke-width="0.8"/>
+    <text x="202" y="857" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#712b13">Ela + Webdeveloper</text>
+    <text x="202" y="874" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993c1d">Rozwój portalu e-medycyna.pl</text>
+    <text x="202" y="890" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993c1d">Automatyzacja procesów wewnętrznych</text>
+  </g>
+  <g class="clickable" onclick="show('par_mil')">
+    <rect x="410" y="838" width="394" height="70" rx="6" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.8"/>
+    <text x="607" y="857" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#085041">Milena — asystentka biura i zarządu</text>
+    <text x="607" y="874" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Asortyment biurowy · konserwacja ekspresu i drukarki</text>
+    <text x="607" y="890" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#0f6e56">Wsparcie administracyjne zarządu</text>
+  </g>
+
+  <!-- ===== RÓWNOLEGŁE rząd 2 ===== -->
+  <g class="clickable" onclick="show('par_stu')">
+    <rect x="10" y="922" width="384" height="78" rx="6" fill="#faeedb" stroke="#854f0b" stroke-width="0.8"/>
+    <text x="202" y="941" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#633806">Studio (Łukasz + Radek)</text>
+    <text x="202" y="958" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Funkcjonowanie i organizacja studia</text>
+    <text x="202" y="974" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Ewidencjonowanie sprzętu</text>
+    <text x="202" y="990" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#854f0b">Rozwój technologiczny studia</text>
+  </g>
+  <g class="clickable" onclick="show('par_mon')">
+    <rect x="410" y="922" width="394" height="78" rx="6" fill="#fbeaf0" stroke="#993556" stroke-width="0.8"/>
+    <text x="607" y="941" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#722436">Monika</text>
+    <text x="607" y="958" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">Projektowanie wirtualnych studiów</text>
+    <text x="607" y="974" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#993556">dla klientów</text>
+  </g>
+
+  <!-- stopka -->
+  <line x1="10" y1="1014" x2="804" y2="1014" stroke="#d0cfc9" stroke-width="0.5"/>
+  <text x="407" y="1024" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#bbb">Diagram procesu produkcji — e-medycyna.pl</text>
+</svg>
+<p class="hint">Kliknij dowolny kolorowy blok, aby zobaczyć szczegóły roli i zadań</p>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="overlay" id="overlay" onclick="closeIfBg(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="hide()">✕</button>
+    <div class="modal-badge" id="modal-badge"></div>
+    <div class="modal-step" id="modal-step"></div>
+    <h2 id="modal-title"></h2>
+    <ul id="modal-list"></ul>
+  </div>
+</div>
+
+<script>
+const data = {
+  k1: {
+    badge: "Zarząd", badgeColor: "#eeedfe", badgeText: "#534AB7",
+    step: "Krok 1 — Start procesu",
+    title: "Zarząd",
+    items: [
+      "Ustalenie zakresu usług dla klienta",
+      "Przygotowanie i wysyłka oferty",
+      "Decyzja o uruchomieniu projektu",
+      "Zatwierdza zmiany w Tabeli TERMINY"
+    ]
+  },
+  k2a: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Krok 2 — Planowanie",
+    title: "Milena",
+    items: [
+      "Przenosi dane projektu do Tabeli TERMINY",
+      "Uzupełnia terminy, typ projektu, zakres usług"
+    ]
+  },
+  k2b: {
+    badge: "Tabela TERMINY", badgeColor: "#e6f1fb", badgeText: "#185fa5",
+    step: "Krok 2 — Planowanie",
+    title: "Tabela TERMINY",
+    items: [
+      "Centralny dokument planowania projektu",
+      "Typy projektów: webinar, podcast, adboard, rolki, raport",
+      "Źródło informacji dla całego zespołu w trakcie realizacji"
+    ]
+  },
+  k3: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Krok 3 — Przygotowanie",
+    title: "Milena — kontakt z klientem",
+    items: [
+      "Pozyskanie materiałów reklamowych i info o oprawie graficznej",
+      "Odbiór prezentacji od wykładowców",
+      "Organizacja logistyki i cateringu",
+      "Zlecenie produkcji grafik do Moniki"
+    ]
+  },
+  k4a: {
+    badge: "Monika", badgeColor: "#fbeaf0", badgeText: "#993556",
+    step: "Krok 4 — Produkcja graficzna",
+    title: "Monika — grafika i newslettery",
+    items: [
+      "Produkcja pakietu graficznego: tablice i oprawa wizualna",
+      "Przygotowanie i wysyłka newsletterów",
+      "Wysyłka mailingu do uczestników wydarzenia"
+    ]
+  },
+  k4b: {
+    badge: "Monika + Studio", badgeColor: "#faeedb", badgeText: "#854f0b",
+    step: "Krok 4 — Content SM",
+    title: "Monika + Studio — Social Media",
+    items: [
+      "Wspólna produkcja contentu na kanały Social Media",
+      "Łukasz i Radek odpowiadają za warstwę wideo/multimedialną",
+      "Monika odpowiada za grafikę i spójność wizualną"
+    ]
+  },
+  k5tab: {
+    badge: "Tabela TERMINY", badgeColor: "#e6f1fb", badgeText: "#185fa5",
+    step: "Krok 5 — Realizacja",
+    title: "Tabela TERMINY — źródło info",
+    items: [
+      "Studio korzysta z Tabeli jako głównego źródła informacji o projekcie",
+      "Zawiera terminy, dane klienta, zakres realizacji"
+    ]
+  },
+  k5mil: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Krok 5 — Realizacja",
+    title: "Milena — bezpośrednie info",
+    items: [
+      "Przekazuje Studio bieżące informacje od klienta",
+      "Kontakt na żywo lub mailowy w dniu realizacji"
+    ]
+  },
+  k5stu: {
+    badge: "Studio", badgeColor: "#faeedb", badgeText: "#854f0b",
+    step: "Krok 5 — Realizacja",
+    title: "Studio (Łukasz + Radek)",
+    items: [
+      "Przygotowanie sprzętu i realizacji multimedialnej",
+      "Nagranie wydarzenia (webinar, podcast, adboard itp.)",
+      "Obsługa techniczna na miejscu lub zdalnie"
+    ]
+  },
+  k6stu: {
+    badge: "Studio", badgeColor: "#faeedb", badgeText: "#854f0b",
+    step: "Krok 6 — Post-produkcja",
+    title: "Studio — montaż",
+    items: [
+      "Montaż materiałów wg terminów z projektu",
+      "Raportowanie uwag i zmian do Eli drogą mailową"
+    ]
+  },
+  k6ela: {
+    badge: "Ela", badgeColor: "#faece7", badgeText: "#993c1d",
+    step: "Krok 6 — Post-produkcja",
+    title: "Ela — nadzór",
+    items: [
+      "Odbiera raporty zmian od Studia mailowo",
+      "Nadzór nad całym procesem post-produkcji",
+      "Koordynacja między etapami"
+    ]
+  },
+  k7mon: {
+    badge: "Monika", badgeColor: "#fbeaf0", badgeText: "#993556",
+    step: "Krok 7 — Publikacja",
+    title: "Monika — publikacja",
+    items: [
+      "Publikacja gotowych materiałów na portalu e-medycyna.pl"
+    ]
+  },
+  k7mil: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Krok 7 — Komunikacja z klientem",
+    title: "Milena — obsługa posprzedażowa",
+    items: [
+      "Kontakt z klientem po publikacji materiałów",
+      "Wysyłka raportów i podsumowań",
+      "Informowanie o dostępności materiałów"
+    ]
+  },
+  k8stu: {
+    badge: "Studio", badgeColor: "#faeedb", badgeText: "#854f0b",
+    step: "Krok 8 — Archiwizacja",
+    title: "Studio — archiwizacja i rolki",
+    items: [
+      "Archiwizacja wszystkich materiałów na chmurze",
+      "Produkcja rolek i shortformów na social media"
+    ]
+  },
+  k8mil: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Krok 8 — Dystrybucja SM",
+    title: "Milena — publikacja SM",
+    items: [
+      "Publikacja rolek i materiałów na kanałach Social Media firmy"
+    ]
+  },
+  par_ela: {
+    badge: "Ela", badgeColor: "#faece7", badgeText: "#993c1d",
+    step: "Działania równoległe",
+    title: "Ela + Webdeveloper — portal i automatyzacja",
+    items: [
+      "Rozwój i utrzymanie portalu e-medycyna.pl",
+      "Współpraca z webdeveloperem przy wdrożeniach",
+      "Automatyzacja procesów wewnętrznych firmy"
+    ]
+  },
+  par_mil: {
+    badge: "Milena", badgeColor: "#e1f5ee", badgeText: "#0f6e56",
+    step: "Działania równoległe",
+    title: "Milena — asystentka biura i zarządu",
+    items: [
+      "Zarządzanie asortymentem biurowym",
+      "Konserwacja ekspresu do kawy i drukarki",
+      "Wsparcie administracyjne zarządu"
+    ]
+  },
+  par_stu: {
+    badge: "Studio", badgeColor: "#faeedb", badgeText: "#854f0b",
+    step: "Działania równoległe",
+    title: "Studio (Łukasz + Radek) — zarządzanie studiem",
+    items: [
+      "Funkcjonowanie i codzienna organizacja studia",
+      "Ewidencjonowanie i inwentaryzacja sprzętu",
+      "Planowanie i wdrażanie rozwoju technologicznego studia"
+    ]
+  },
+  par_mon: {
+    badge: "Monika", badgeColor: "#fbeaf0", badgeText: "#993556",
+    step: "Działania równoległe",
+    title: "Monika — wirtualne studia",
+    items: [
+      "Projektowanie wirtualnych studiów dla klientów",
+      "Tworzenie konceptów scenografii wirtualnej"
+    ]
+  }
+};
+
+function show(id) {
+  const d = data[id];
+  if (!d) return;
+  document.getElementById('modal-badge').textContent = d.badge;
+  document.getElementById('modal-badge').style.background = d.badgeColor;
+  document.getElementById('modal-badge').style.color = d.badgeText;
+  document.getElementById('modal-badge').style.border = '1px solid ' + d.badgeText;
+  document.getElementById('modal-step').textContent = d.step;
+  document.getElementById('modal-step').style.cssText = 'font-size:11px;color:#888;margin-bottom:8px;';
+  document.getElementById('modal-title').textContent = d.title;
+  const ul = document.getElementById('modal-list');
+  ul.innerHTML = d.items.map(i => `<li>${i}</li>`).join('');
+  document.getElementById('overlay').classList.add('active');
+}
+
+function hide() {
+  document.getElementById('overlay').classList.remove('active');
+}
+
+function closeIfBg(e) {
+  if (e.target === document.getElementById('overlay')) hide();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+</script>
+
+</body>
+</html>
